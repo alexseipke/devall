@@ -1,0 +1,16 @@
+    calculateComplexity(code) {
+        let complexity = 1;
+        if (!code || typeof code !== 'string') return complexity;
+        
+        const keywords = ['if', 'else', 'for', 'while', 'case', 'catch'];
+        for (const keyword of keywords) {
+            const regex = new RegExp('\\b' + keyword + '\\b', 'g');
+            const matches = code.match(regex);
+            if (matches) complexity += matches.length;
+        }
+        
+        const operators = code.match(/&&|\|\|/g);
+        if (operators) complexity += operators.length;
+        
+        return complexity;
+    }

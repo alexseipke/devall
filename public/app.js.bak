@@ -1,0 +1,329 @@
+// Estado global
+let currentRepo = null;
+let projectAnalysis = null;
+let fileTree = [];
+let activeFile = null;
+
+// Auto-analizar proyecto al cargar
+async function loadRepository() {
+    const repoInput = document.getElementById('repo-input').value;
+    if (!repoInput.includes('/')) {
+        showNotification('Format: owner/repository', 'error');
+        return;
+    }
+    
+    const [owner, repo] = repoInput.split('/');
+    document.getElementById("loading-indicator").style.display = "block";
+    
+    try {
+        const response = await fetch('/api/load-repo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ owner, repo })
+        });
+        
+        const data = await response.json();
+        if (data.error) {
+            showNotification(data.error, 'error');
+            return;
+        }
+        
+        currentRepo = data.repository;
+        projectAnalysis = data.analysis;
+        fileTree = data.structure;
+        
+        // Actualizar UI
+        document.getElementById('repo-name').textContent = currentRepo.name;
+        document.getElementById('repo-stats').innerHTML = `
+            <div class="stat-item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+                </svg>
+                ${currentRepo.stargazers_count}
+            </div>
+            <div class="stat-item">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
+                </svg>
+                ${currentRepo.forks_count}
+            </div>
+        `;
+        
+        // Renderizar árbol de archivos
+        renderFileTree();
+        
+        // ANÁLISIS AUTOMÁTICO DEL PROYECTO COMPLETO
+        await analyzeFullProject();
+        
+    } catch (error) {
+        showNotification('Error: ' + error, 'error');
+    } finally {
+        document.getElementById("loading-indicator").style.display = "none";
+    }
+}
+
+async function analyzeFullProject() {
+    // Mostrar que estamos analizando
+    addChatMessage('System', 'Analyzing your entire project structure...', 'system');
+    
+    // Hacer análisis profundo
+    const analysisMessage = `
+I've analyzed your ${currentRepo.name} project:
+
+**Framework:** ${projectAnalysis.framework || 'Vanilla JS'}
+**Primary Language:** ${projectAnalysis.language}
+**Total Files:** ${projectAnalysis.totalFiles}
+${projectAnalysis.patterns?.length > 0 ? `**Patterns Detected:** ${projectAnalysis.patterns.map(p => p.type).join(', ')}` : ''}
+
+I'm ready to help you with:
+- Code improvements and refactoring
+- Bug detection and fixes
+- Performance optimizations
+- Best practices recommendations
+- Documentation generation
+- Test creation
+
+What would you like to work on first?
+    `.trim();
+    
+    addChatMessage('devall.ai', analysisMessage, 'assistant');
+    
+    // Preguntar proactivamente
+    setTimeout(() => {
+        suggestImprovements();
+    }, 1000);
+}
+
+async function suggestImprovements() {
+    const suggestions = [
+        "I noticed some areas that could be improved. Would you like me to analyze them?",
+        "I can help optimize your code structure. Shall we start?",
+        "I found some patterns that could be refactored. Interested?",
+        "Your project could benefit from better error handling. Want details?"
+    ];
+    
+    // Auto-sugerir basado en el análisis
+    if (projectAnalysis.totalFiles > 20) {
+        const message = "This is a large project. Would you like me to create a detailed architecture overview?";
+        addQuickAction(message);
+    }
+}
+
+function addQuickAction(message) {
+    const messagesDiv = document.getElementById('chat-messages');
+    const actionEl = document.createElement('div');
+    actionEl.className = 'quick-action-suggestion';
+    actionEl.innerHTML = `
+        <div class="suggestion-content">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 1.5a6.5 6.5 0 106.016 4.035.75.75 0 011.388-.57 8 8 0 11-2.275-3.923.75.75 0 01.826 1.253A6.5 6.5 0 008 1.5z"/>
+            </svg>
+            <span>${message}</div>
+            <button onclick="acceptSuggestion('${message}')" class="accept-btn">Yes</button>
+        </div>
+    `;
+    messagesDiv.appendChild(actionEl);
+}
+
+function acceptSuggestion(message) {
+    document.getElementById('chat-input').value = message;
+    sendMessage();
+}
+
+function renderFileTree() {
+    const treeEl = document.getElementById('file-tree');
+    const files = fileTree.tree.filter(item => item.type === 'blob');
+    const tree = buildTree(files);
+    treeEl.innerHTML = renderTreeHTML(tree);
+}
+
+function buildTree(files) {
+    const tree = {};
+    files.forEach(file => {
+        const parts = file.path.split('/');
+        let current = tree;
+        parts.forEach((part, idx) => {
+            if (idx === parts.length - 1) {
+                current[part] = { type: 'file', path: file.path };
+            } else {
+                if (!current[part]) current[part] = { type: 'folder', children: {} };
+                current = current[part].children;
+            }
+        });
+    });
+    return tree;
+}
+
+function renderTreeHTML(tree, level = 0) {
+    let html = '';
+    Object.entries(tree).forEach(([name, node]) => {
+        if (node.type === 'folder') {
+            html += `
+                <div class="tree-folder" style="padding-left: ${level * 16}px">
+                    <div class="tree-folder" onclick="toggleFolder(this)" style="padding-left: ${level * 16}px">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                            <path d="M4.5 3L7.5 6L4.5 9"/>
+                        </svg>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3h-6.5a.25.25 0 01-.2-.1l-.9-1.2C6.07 1.12 5.85 1 5.62 1H1.75z"/>
+                    </svg>
+                    ${name}
+                    <div class="folder-children" style="display: none">
+                        ${renderTreeHTML(node.children, level + 1)}
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="tree-file" style="padding-left: ${(level + 1) * 16}px" onclick="loadFile('${node.path}')">
+                    ${getFileIcon(name)}
+                    ${name}
+                </div>
+            `;
+        }
+    });
+    return html;
+}
+
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const icons = {
+        js: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#f1e05a"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>',
+        jsx: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#61dafb"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>',
+        json: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#cbcb41"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>',
+        html: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#e34c26"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>',
+        css: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#563d7c"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>',
+        md: '<svg width="16" height="16" viewBox="0 0 16 16" fill="#083fa1"><path d="M8 4a4 4 0 100 8 4 4 0 000-8z"/></svg>'
+    };
+    return icons[ext] || '<svg width="16" height="16" viewBox="0 0 16 16" fill="#6a737d"><path d="M2 1.75C2 .784 2.784 0 3.75 0h5.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v8.586A1.75 1.75 0 0112.25 15h-8.5A1.75 1.75 0 012 13.25V1.75z"/></svg>';
+}
+
+function toggleFolder(folderElement) {
+    const children = folderElement.querySelector(".folder-children");
+    if (children) {
+        if (children.style.display === "none") {
+            children.style.display = "block";
+            folderElement.classList.add("expanded");
+        } else {
+            children.style.display = "none";
+            folderElement.classList.remove("expanded");
+        }
+    }
+}
+
+async function loadFile(path) {
+    activeFile = path;
+    try {
+        const response = await fetch('/api/get-file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path })
+        });
+        const data = await response.json();
+        displayCode(data.content, path);
+    } catch (error) {
+        showNotification('Error loading file', 'error');
+    }
+}
+
+function displayCode(content, filename) {
+    const display = document.getElementById('code-display');
+    const lines = content.split('\n');
+    let html = '<div class="code-wrapper"><table class="code-table"><tbody>';
+    
+    lines.forEach((line, i) => {
+        html += `
+            <tr>
+                <td class="line-number">${i + 1}</td>
+                <td class="line-content"><pre>${escapeHtml(line)}</pre></td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    display.innerHTML = html;
+    document.getElementById('current-file').textContent = filename.split('/').pop();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    addChatMessage('You', message, 'user');
+    input.value = '';
+    
+    const typingId = showTyping();
+    
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        removeTyping(typingId);
+        addChatMessage('devall.ai', data.response || data.error, 'assistant');
+    } catch (error) {
+        removeTyping(typingId);
+        addChatMessage('System', 'Error: ' + error, 'error');
+    }
+}
+
+function addChatMessage(sender, message, type) {
+    const container = document.getElementById('chat-messages');
+    const msgEl = document.createElement('div');
+    msgEl.className = `message ${type}`;
+    
+    const formatted = message
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+    
+    msgEl.innerHTML = `
+        <div class="msg-sender">${sender}</div>
+        <div class="msg-content">${formatted}</div>
+    `;
+    
+    container.appendChild(msgEl);
+    container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+    const id = 'typing-' + Date.now();
+    const container = document.getElementById('chat-messages');
+    const typing = document.createElement('div');
+    typing.id = id;
+    typing.className = 'typing';
+    typing.innerHTML = '<span></div><span></div><span></div>';
+    container.appendChild(typing);
+    return id;
+}
+
+function removeTyping(id) {
+    document.getElementById(id)?.remove();
+}
+
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
+
+function showNotification(msg, type) {
+    console.log(`${type}: ${msg}`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('chat-input').addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+});

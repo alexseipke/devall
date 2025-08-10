@@ -1,0 +1,108 @@
+// Endpoint: Cargar y analizar repositorio
+app.post('/api/load-repo', async (req, res) => {
+  const { owner, repo } = req.body;
+  try {
+    console.log(`📂 Loading repository: ${owner}/${repo}`);
+    const { data: repoData } = await octokit.repos.get({ owner, repo });
+    const { data: tree } = await octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: repoData.default_branch,
+      recursive: true
+    });
+    
+    projectContext.repository = { owner, repo, data: repoData };
+    projectContext.structure = tree;
+    projectContext.files = {};
+    
+    // Load essential files for analysis
+    const essentialFiles = tree.tree
+      .filter(f => f.type === 'blob' && 
+        (f.path.endsWith('.js') || f.path.endsWith('.json') || 
+         f.path.endsWith('.jsx') || f.path.endsWith('.tsx')))
+      .slice(0, 30);
+    
+    for (const file of essentialFiles) {
+      await contextManager.loadFile(file.path);
+    }
+    
+    // Store files in context manager and analyze
+    contextManager.projectContext.content.files = projectContext.files;
+    projectAnalysis = await contextManager.analyzeProject({ tree });
+    
+    res.json({ 
+      success: true, 
+      repository: repoData,
+      analysis: {
+        framework: projectAnalysis.metadata.framework,
+        language: projectAnalysis.metadata.language,
+        patterns: projectAnalysis.analysis.patterns,
+        totalFiles: Object.keys(projectAnalysis.content.files).length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint: Chat with intelligent context
+app.post('/api/chat', async (req, res) => {
+  const { message } = req.body;
+  if (!projectContext.repository) {
+    return res.status(400).json({ error: 'Please load a repository first' });
+  }
+  
+  try {
+    // Build intelligent context
+    const context = await contextManager.buildContext(message, {
+      maxTokens: 30000,
+      includeAnalysis: true,
+      includeMemory: true
+    });
+    
+    // Create context prompt
+    const contextPrompt = `You are analyzing: ${projectContext.repository.owner}/${projectContext.repository.repo}
+Framework: ${context.project.framework || 'Not detected'}
+Language: ${context.project.language}
+Patterns: ${context.patterns?.map(p => p.type).join(', ') || 'None'}
+
+Relevant code for query:
+${context.relevantFiles?.slice(0, 3).map(f => `File: ${f.path}\n\`\`\`\n${f.content?.substring(0, 1000)}\n\`\`\``).join('\n') || 'No files'}
+
+User query: ${message}`;
+    
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: contextPrompt }]
+    });
+    
+    await contextManager.updateMemory({
+      query: message,
+      response: response.content[0].text
+    });
+    
+    res.json({ 
+      response: response.content[0].text,
+      contextUsed: {
+        filesIncluded: context.relevantFiles?.length || 0,
+        tokensEstimated: contextManager.estimateTokens(contextPrompt)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint: Analyze project health
+app.get('/api/analyze-health', async (req, res) => {
+  if (!projectAnalysis) {
+    return res.status(400).json({ error: 'No project loaded' });
+  }
+  try {
+    const health = await contextManager.analyzeProjectHealth();
+    res.json(health);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});

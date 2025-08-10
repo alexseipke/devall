@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>devall.app - Intelligent Code Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>devall.app</span>
+            </div>
+            <div class="repo-info">
+                <span id="repo-name">No repository loaded</span>
+                <span id="repo-description"></span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="repo-stats"></div>
+            <button class="header-btn" onclick="toggleTheme()">🌙</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Repository Loader -->
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <span>Repository</span>
+                </div>
+                <div class="repo-loader">
+                    <input type="text" id="repo-input" placeholder="owner/repository" value="alexseipke/viizor">
+                    <button onclick="loadRepository()" class="btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 2V8M8 8L5 5M8 8L11 5" stroke="currentColor" stroke-width="2"/>
+                            <path d="M2 11V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V11" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Load
+                    </button>
+                </div>
+                <div id="loading-indicator" class="loading-indicator" style="display:none">
+                    <div class="spinner"></div>
+                    <span>Loading repository...</span>
+                </div>
+            </div>
+
+            <!-- Project Info -->
+            <div id="project-info" class="sidebar-section"></div>
+
+            <!-- File Explorer -->
+            <div class="sidebar-section file-explorer">
+                <div class="section-header">
+                    <span>Files</span>
+                    <button class="icon-btn" onclick="collapseAll()">⊟</button>
+                </div>
+                <div id="file-tree" class="file-tree"></div>
+            </div>
+        </aside>
+
+        <!-- Editor -->
+        <main class="editor">
+            <div class="editor-header">
+                <div class="tabs">
+                    <div class="tab active" id="current-file">Welcome</div>
+                </div>
+                <div class="editor-actions">
+                    <button class="icon-btn" onclick="formatCode()">⚡</button>
+                    <button class="icon-btn" onclick="copyCode()">📋</button>
+                </div>
+            </div>
+            <div class="editor-content">
+                <div id="editor-loading" class="editor-loading" style="display:none">
+                    <div class="spinner"></div>
+                </div>
+                <div id="code-display" class="code-display">
+                    <div class="welcome-screen">
+                        <h1>Welcome to devall.app</h1>
+                        <p>Your intelligent code companion powered by Claude AI</p>
+                        
+                        <div class="features">
+                            <div class="feature">
+                                <span class="feature-icon">🧠</span>
+                                <h3>Smart Analysis</h3>
+                                <p>Deep understanding of your entire codebase with context-aware AI</p>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">💡</span>
+                                <h3>Intelligent Suggestions</h3>
+                                <p>Get real-time improvements and best practices recommendations</p>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon">🚀</span>
+                                <h3>Boost Productivity</h3>
+                                <p>Write better code faster with AI-powered assistance</p>
+                            </div>
+                        </div>
+
+                        <div class="quick-start">
+                            <h3>Quick Start</h3>
+                            <ol>
+                                <li>Enter a GitHub repository (e.g., facebook/react)</li>
+                                <li>Click Load to analyze the codebase</li>
+                                <li>Browse files and ask questions about the code</li>
+                                <li>Get intelligent insights and suggestions</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- AI Assistant -->
+        <aside class="ai-panel" id="ai-panel">
+            <div class="ai-header">
+                <div class="ai-title">
+                    <span class="ai-icon">✨</span>
+                    <span>devall.ai Assistant</span>
+                </div>
+                <div class="ai-status" id="ai-status">
+                    <span class="status-dot"></span>
+                    <span>Ready</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button onclick="askExplain()" class="quick-btn">
+                    <span>🔍</span>
+                    Explain
+                </button>
+                <button onclick="askImprove()" class="quick-btn">
+                    <span>⚡</span>
+                    Improve
+                </button>
+                <button onclick="askDebug()" class="quick-btn">
+                    <span>🐛</span>
+                    Debug
+                </button>
+                <button onclick="askTest()" class="quick-btn">
+                    <span>🧪</span>
+                    Test
+                </button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages"></div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="chat-input" 
+                        placeholder="Ask anything about your code..."
+                        rows="3"
+                    ></textarea>
+                    <div class="input-actions">
+                        <span class="char-count">0/2000</span>
+                        <button onclick="sendMessage()" class="send-btn">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M2 10L17 2L13 10L17 18L2 10Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications"></div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+
+    <script src="app.js"></script>
+</body>
+</html>

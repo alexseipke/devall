@@ -1,0 +1,26 @@
+    calculateComplexity(code) {
+        // Complejidad ciclomática simplificada
+        let complexity = 1;
+        
+        // Palabras clave que aumentan complejidad
+        const patterns = [
+            /\bif\b/g,
+            /\belse\b/g,
+            /\bfor\b/g,
+            /\bwhile\b/g,
+            /\bcase\b/g,
+            /\bcatch\b/g,
+            /&&/g,
+            /\|\|/g,
+            /\?.*:/g
+        ];
+        
+        for (const pattern of patterns) {
+            const matches = code.match(pattern);
+            if (matches) {
+                complexity += matches.length;
+            }
+        }
+        
+        return complexity;
+    }

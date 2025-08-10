@@ -1,0 +1,21 @@
+
+// Override loadFile method in contextManager
+contextManager.loadFile = async (path) => {
+  if (projectContext.files[path]) {
+    return projectContext.files[path];
+  }
+  if (!projectContext.repository) return '';
+  try {
+    const { data } = await octokit.repos.getContent({
+      owner: projectContext.repository.owner,
+      repo: projectContext.repository.repo,
+      path: path
+    });
+    const content = Buffer.from(data.content, 'base64').toString('utf-8');
+    projectContext.files[path] = content;
+    return content;
+  } catch (error) {
+    console.error(`Error loading file ${path}:`, error.message);
+    return '';
+  }
+};
