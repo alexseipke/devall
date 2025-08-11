@@ -1,17 +1,8 @@
 {
   "sessions": [
     {
-      "timestamp": "2025-08-11T20:02:56.035Z",
-      "query": "que me puedes decir sobre el proyecto!",
-      "response": "Basado en la información proporcionada, puedo decir lo siguiente sobre el proyecto devall-app:\n\n1. Tecnologías principales:\n- Está desarrollado en JavaScript\n- Utiliza el framework Express.js, que es uno de los frameworks web más populares para Node.js\n\n2. Nombre y ubicación:\n- El proyecto se llama \"devall-app\"\n- Está alojado en GitHub bajo el repositorio \"alexseipke/devall\"\n\nSin embargo, tengo limitaciones importantes para proporcionar un análisis más detallado ya que:\n- No tengo acceso a los a...",
-      "filesAnalyzed": [],
-      "insights": []
-    },
-    {
-      "date": "2025-08-11T20:02:56.036Z",
-      "query": "que me puedes decir sobre el proyecto!",
-      "response": "Basado en la información proporcionada, puedo decir lo siguiente sobre el proyecto devall-app:\n\n1. Tecnologías principales:\n- Está desarrollado en JavaScript\n- Utiliza el framework Express.js, que es ...",
-      "type": "chat"
+      "date": "2025-08-11T20:34:23.267Z",
+      "type": "initial-analysis"
     }
   ]
 }
