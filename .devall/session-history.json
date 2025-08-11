@@ -8,9 +8,16 @@
       "insights": []
     },
     {
-      "date": "2025-08-11T19:39:11.972Z",
-      "query": "dime sobre el proyecto",
-      "response": "Basándome en el análisis proporcionado, puedo decirte lo siguiente sobre el proyecto:\n\n1. Características técnicas:\n- Es un proyecto en JavaScript\n- Es una aplicación backend desarrollada con Express....",
+      "timestamp": "2025-08-11T19:39:40.590Z",
+      "query": "no puedes ver los archivos?",
+      "response": "Según la información proporcionada, parece que no tengo acceso directo al contenido de los archivos del repositorio. Solo puedo ver la información básica del análisis que incluye:\n\n- El nombre del repositorio (alexseipke/devall)\n- El lenguaje usado (JavaScript)\n- La arquitectura (Backend-Only)\n- El framework backend (Express.js)\n- Una lista de archivos críticos \n- Las dependencias del proyecto\n- El número de sesiones\n\nPara poder analizar el código en detalle, necesitaría que se carguen los archi...",
+      "filesAnalyzed": [],
+      "insights": []
+    },
+    {
+      "date": "2025-08-11T19:39:40.591Z",
+      "query": "no puedes ver los archivos?",
+      "response": "Según la información proporcionada, parece que no tengo acceso directo al contenido de los archivos del repositorio. Solo puedo ver la información básica del análisis que incluye:\n\n- El nombre del rep...",
       "type": "chat"
     }
   ]
