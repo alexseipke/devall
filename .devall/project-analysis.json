@@ -1,0 +1,12 @@
+{
+  "lastAnalysis": "2025-08-11T18:35:04.245Z",
+  "framework": "unknown",
+  "language": "JavaScript",
+  "dependencies": [
+    "@anthropic-ai/sdk",
+    "@octokit/rest",
+    "cors",
+    "dotenv",
+    "express"
+  ]
+}
