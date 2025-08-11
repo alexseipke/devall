@@ -1,17 +1,8 @@
 {
   "sessions": [
     {
-      "timestamp": "2025-08-11T19:51:36.404Z",
-      "query": "me cuentas sobre el proeycto?",
-      "response": "Basado en la información proporcionada, puedo contarte lo siguiente sobre el proyecto:\n\n1. Es un proyecto desarrollado en JavaScript que consiste en una aplicación backend utilizando Express.js como framework principal.\n\n2. Características técnicas principales:\n- Utiliza Express.js como framework de backend\n- No tiene frontend (es \"Backend-Only\")\n- Tiene integración con APIs externas a través de dependencias como @anthropic-ai/sdk y @octokit/rest\n\n3. Dependencias principales:\n- @anthropic-ai/sdk...",
-      "filesAnalyzed": [],
-      "insights": []
-    },
-    {
-      "date": "2025-08-11T19:51:36.404Z",
-      "query": "me cuentas sobre el proeycto?",
-      "response": "Basado en la información proporcionada, puedo contarte lo siguiente sobre el proyecto:\n\n1. Es un proyecto desarrollado en JavaScript que consiste en una aplicación backend utilizando Express.js como f...",
-      "type": "chat"
+      "date": "2025-08-11T19:55:01.478Z",
+      "type": "initial-analysis"
     }
   ]
 }
