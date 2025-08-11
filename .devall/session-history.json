@@ -1,17 +1,8 @@
 {
   "sessions": [
     {
-      "timestamp": "2025-08-11T19:55:45.602Z",
-      "query": "me cuentas sobre el proyecto?",
-      "response": "Basado en el análisis proporcionado, puedo contarte lo siguiente sobre el proyecto:\n\n1. Es un proyecto desarrollado en JavaScript que consiste principalmente en una aplicación backend.\n\n2. Tecnologías principales:\n- Utiliza Express.js como framework backend\n- Tiene integración con APIs externas (se puede ver por las dependencias)\n\n3. Dependencias destacadas:\n- @anthropic-ai/sdk: Probablemente usa la API de Anthropic (IA)\n- @octokit/rest: Para interactuar con la API de GitHub\n- cors: Para manejo ...",
-      "filesAnalyzed": [],
-      "insights": []
-    },
-    {
-      "date": "2025-08-11T19:55:45.603Z",
-      "query": "me cuentas sobre el proyecto?",
-      "response": "Basado en el análisis proporcionado, puedo contarte lo siguiente sobre el proyecto:\n\n1. Es un proyecto desarrollado en JavaScript que consiste principalmente en una aplicación backend.\n\n2. Tecnologías...",
-      "type": "chat"
+      "date": "2025-08-11T20:02:14.551Z",
+      "type": "initial-analysis"
     }
   ]
 }
